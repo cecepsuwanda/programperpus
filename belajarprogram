@@ -5,31 +5,16 @@ uses crt;
 const
   MaksArray = 100;
 type
-  buku = record
-  kodebuku,judul,pengarang,penerbit: string;
-  tahunterbit : integer;
-end;//endrecord
-  arraybuku = array [1..MaksArray] of buku;
-var
-  dataBuku         : arrayBuku;
-  totalbuku,banyakbuku,pilmenu: integer;
-  pilhapus         : char;
+  Tbuku = record
+            kodebuku,judul,pengarang,penerbit: string;
+            tahunterbit : integer;
+            next :^Tbuku;
+         end;//endrecord
+  arraybuku = ^Tbuku;
 
-procedure penciptaandatabuku(banyakbuku : integer; var databuku : arrayBuku);
-{I.S. : databuku isinya kosong}
-{F.S. : isi array akan disii dengan '0' apabila numerik dan "space" apabila alphanumerik}
-var
-  i : integer;
-begin
-  for i := 1 to banyakBuku do
-    begin
-      databuku[i].kodebuku    := ' ';
-      databuku[i].judul        := ' ';
-      databuku[i].pengarang    := ' ';
-      databuku[i].penerbit     := ' ';
-      databuku[i].tahunterbit := 0;
-    end; //endfor
-end; //endprocedure
+
+
+
 
 procedure menupilihan(var pilmenu : integer);
 {I.S. : User memasukkan pilihan}
@@ -45,46 +30,65 @@ begin
   gotoxy(46,11);write('Pilihan Anda: ');readln(pilmenu);
 end; //endprocedure
 
-procedure IsiBuku(var totalbuku, banyakbuku : integer ; var databuku : arraybuku);
+procedure IsiBuku(banyakbuku : integer ; var databuku : arraybuku);
 {I.S. : User memasukkan data ke array databuku}
 {F.S. : databuku sudah terisi dengan data}
 var
   i : integer;
+  pdatabuku,tmp_databuku : arraybuku;
   begin
+    pdatabuku := databuku; //arahkan pdatabuku ke awal link list
+    if pdatabuku <> nil then  
+       while (pdatabuku^.next<>nil)   do
+            pdatabuku:=pdatabuku^.next;
+
     for i := 1 to banyakbuku do
     begin
       clrscr;
+      new(tmp_databuku);
       gotoxy(44,2); write('TAMBAH BUKU PERPUSTAKAAN UNIKOM!');
       gotoxy(44,3); write('--------------------------------');
-      gotoxy(45,5); write('Kode buku Ke-',i,'         : ');readln(databuku[i].kodebuku);
-      gotoxy(45,6); write('Judul buku Ke-',i,'        : ');readln(databuku[i].judul);
-      gotoxy(45,7); write('Pengarang buku Ke-',i,'    : ');readln(databuku[i].pengarang);
-      gotoxy(45,8); write('Penerbit buku Ke-',i,'     : ');readln(databuku[i].penerbit);
-      gotoxy(45,9); write('Tahun terbit buku Ke-',i,' : ');readln(databuku[i].tahunterbit);
-      totalbuku := banyakBuku;
-  end; //endfor
+      gotoxy(45,5); write('Kode buku Ke-',i,'         : ');readln(tmp_databuku^.kodebuku);
+      gotoxy(45,6); write('Judul buku Ke-',i,'        : ');readln(tmp_databuku^.judul);
+      gotoxy(45,7); write('Pengarang buku Ke-',i,'    : ');readln(tmp_databuku^.pengarang);
+      gotoxy(45,8); write('Penerbit buku Ke-',i,'     : ');readln(tmp_databuku^.penerbit);
+      gotoxy(45,9); write('Tahun terbit buku Ke-',i,' : ');readln(tmp_databuku^.tahunterbit);
+      tmp_databuku^.next:=nil;
+      if pdatabuku=nil then
+        begin
+          pdatabuku:=tmp_databuku;
+          databuku := pdatabuku;
+        end 
+      else   
+         pdatabuku^.next:=tmp_databuku;      
+    end; //endfor
 end; //endprocedure
 
-  procedure tampildatabuku(totalbuku : integer; var databuku : arraybuku);
+  procedure tampildatabuku(databuku : arraybuku);
   {I.S. : User memilih menu nomer dua}
   {F.S. : Menampilkan buku yang telah dimasukkan oleh user}
   var
     i : integer;
+    pdatabuku : arraybuku;
   begin
     gotoxy(23,1);write('|------------------------------------------------------------------------|');
     gotoxy(23,2);write('|                       KOLEKSI BUKU PERPUSTAKAAN                        |');
     gotoxy(23,3);write('|------------------------------------------------------------------------|');
     gotoxy(23,4);write('|  Kode Buku  |  Judul buku  |  Pengarang  |  Penerbit  |  Tahun terbit  |');
     gotoxy(23,5);write('|------------------------------------------------------------------------|');
-    for i := 1 to totalbuku do
+    i:=1;
+    pdatabuku:=databuku;
+    while pdatabuku<>nil do
       begin
         gotoxy(23,i+5);write('|             |              |             |            |                |');
-        gotoxy(25,i+5);write(databuku[i].kodebuku);
-        gotoxy(39,i+5);write(databuku[i].judul);
-        gotoxy(54,i+5);write(databuku[i].pengarang);
-        gotoxy(68,i+5);write(databuku[i].penerbit);
-        gotoxy(81,i+5);write(databuku[i].tahunterbit);
+        gotoxy(25,i+5);write(pdatabuku^.kodebuku);
+        gotoxy(39,i+5);write(pdatabuku^.judul);
+        gotoxy(54,i+5);write(pdatabuku^.pengarang);
+        gotoxy(68,i+5);write(pdatabuku^.penerbit);
+        gotoxy(81,i+5);write(pdatabuku^.tahunterbit);
         gotoxy(23,i+6);write('|------------------------------------------------------------------------|');
+        pdatabuku:=pdatabuku^.next;
+        i:=i+1;
       end; //endfor
   end; //endprocedure
   procedure sortingmenaik(totalbuku : integer; var databuku : arraybuku);
@@ -198,24 +202,30 @@ end; //endprocedure
       end //endif
   end;//endprocedure
 
-   procedure penghancurandatabuku(totalbuku : integer; var databuku : arrayBuku);
+   procedure penghancurandatabuku(var databuku : arrayBuku);
    {I.S. : databuku isinya masih kosong}
    {F.S. : array akan disii dengan '0' apabila numerik dan "space" apabila alphanumerik}
    var
-     i : integer;
+     pdatabuku : arraybuku;
    begin
-     for i := 1 to totalbuku do
+     pdatabuku := databuku;
+     while databuku<>nil do
        begin
-         databuku[i].kodebuku    := ' ';
-         databuku[i].judul        := ' ';
-         databuku[i].pengarang    := ' ';
-         databuku[i].penerbit     := ' ';
-         databuku[i].tahunterbit := 0;
+         databuku:=databuku^.next;
+         dispose(pdatabuku); 
+         pdatabuku := databuku;
        end;//endfor
    end;//endprocedure
 //algoritma utama
+
+var
+  dataBuku         : arraybuku;
+  totalbuku,banyakbuku,pilmenu: integer;
+  pilhapus         : char;
+
 begin
-  totalbuku       := 0;
+  totalbuku := 0;
+  databuku := nil;       
   repeat
     clrscr;
     gotoxy(46,2);write('PENGOLAHAN DATA PERPUSTAKAAN UNIKOM');
@@ -227,42 +237,33 @@ begin
             gotoxy(44,2);write('TAMBAH BUKU PERPUSTAKAAN UNIKOM!');
             gotoxy(44,3);write('--------------------------------');
             gotoxy(46,5);write('Masukan Banyak buku : ');readln(banyakBuku);
-            if (totalbuku > MaksArray) 
-		  then
-              begin
-              write('Total buku sudah melebihi batas! Tekan enter untuk kembali ke menu!');
-              readln;
-            end
-            else
-              //pemanggilan procedure penciptaandatabuku
-              penciptaandatabuku(banyakBuku,databuku);
               //pemanggilan procedure isibuku
               gotoxy(46,4);clreol;
-              isibuku(totalbuku,banyakBuku,databuku);
+              isibuku(banyakBuku,databuku);
               gotoxy(43,11);writeln('Tekan enter untuk kembali ke menu!');
               readln;
           end; //endcase1
       2 : begin
             clrscr;
             //pemanggilan procedure tampildatabuku
-            tampildatabuku(totalbuku,databuku);
-            gotoxy(25,totalbuku+7);write('Tekan enter untuk kembali ke menu');
+            tampildatabuku(databuku);
+            gotoxy(25,banyakBuku+7);write('Tekan enter untuk kembali ke menu');
             readln;
           end;//endcase2
       3 : begin
             clrscr;
             //pemanggilan procedure sortingmenaik
             sortingMenaik(totalbuku,databuku);
-            tampildatabuku(totalbuku,databuku);
-            gotoxy(25,totalbuku+8);write('Tekan enter untuk kembali ke menu!');
+            tampildatabuku(databuku);
+            gotoxy(25,banyakBuku+8);write('Tekan enter untuk kembali ke menu!');
             readln;
           end;//endcase3
       4 : begin
             clrscr;
             //pemanggilan procedure sortingmenurun
             sortingMenurun(totalbuku,databuku);
-            tampildatabuku(totalbuku,databuku);
-            gotoxy(25,totalbuku+7);write('Tekan enter untuk kembali ke menu!');
+            tampildatabuku(databuku);
+            gotoxy(25,banyakBuku+7);write('Tekan enter untuk kembali ke menu!');
             readln;
           end;//endcase4
       5 : begin
@@ -280,7 +281,7 @@ begin
              if (pilhapus = 'Y' ) or (pilhapus = 'y') 
 		    then
                begin
-                 penghancurandatabuku(totalbuku, databuku);
+                 penghancurandatabuku(databuku);
                  clrscr;
                  writeln('Buku telah dihapus! Tekan enter untuk kembali ke menu!');
                  readln;
@@ -293,5 +294,5 @@ begin
                end;//endif
           end;//endcase6
     end;//endcase
-  until(pilmenu = 0);
+  until(pilmenu = 0); 
 end.
